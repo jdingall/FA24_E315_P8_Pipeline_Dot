@@ -1,0 +1,289 @@
+`timescale 1ns / 1ps
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// Created for Indiana University's E315 Class
+//
+// 
+// Andrew Lukefahr
+// lukefahr@iu.edu
+//
+// 2021-03-24
+// 2020-02-25
+//
+//////////////////////////////////////////////////////////////////////////////////
+
+module dot #(   
+
+    //Python3
+    //    import numpy as np
+    //    import struct
+        
+    //    weights = np.array( [[1,2,3,4],[5,6,7,8],[9,10,11,12]], dtype=np.float32)
+    //    inputs = np.array([[0.1,0.2,0.3]], dtype=np.float32)
+    //    outs = np.dot(inputs, weights)
+    //    print ('='*80 + '\n Used in dot.sv \n' + '='*80)
+    //    print ('parameter ROWS = %d,' %weights.shape[0])
+    //    print ('parameter COLS = %d,' %weights.shape[1])
+    //    print ()
+    //    print ('parameter [31:0] weights [0:ROWS-1] [0:COLS-1] = \'{')
+    //    for i in range(weights.shape[0]):
+    //        flts_hex = map( lambda x: '$shortrealtobits(' + str(x) + ')', weights[i])
+    //        print ('\t\'{' + ','.join(flts_hex)  + '}', end='')
+    //        print (',' if i < weights.shape[0]-1 else '')
+    //    print ('}')
+
+parameter ROWS = 3,
+parameter COLS = 4,
+
+parameter [31:0] weights [0:ROWS-1] [0:COLS-1] = '{
+	'{$shortrealtobits(1.0),$shortrealtobits(2.0),$shortrealtobits(3.0),$shortrealtobits(4.0)},
+	'{$shortrealtobits(5.0),$shortrealtobits(6.0),$shortrealtobits(7.0),$shortrealtobits(8.0)},
+	'{$shortrealtobits(9.0),$shortrealtobits(10.0),$shortrealtobits(11.0),$shortrealtobits(12.0)}
+}
+     
+    )(
+
+
+    input clk, 
+    input rst, 
+
+    // Incomming Matrix AXI4-Stream
+    input [31:0]                    INPUT_AXIS_TDATA,
+    input                           INPUT_AXIS_TLAST,
+    input                           INPUT_AXIS_TVALID,
+    output reg                      INPUT_AXIS_TREADY,
+    
+    // Outgoing Vector AXI4-Stream 		
+    output reg [31:0]               OUTPUT_AXIS_TDATA,
+    output reg                      OUTPUT_AXIS_TLAST,
+    output reg                      OUTPUT_AXIS_TVALID,
+    input                           OUTPUT_AXIS_TREADY
+
+    );  
+
+    //output vector array (also used for dot calculations)
+    reg [31:0] outputs [0:COLS-1];       
+    //bulk clear the entire output array 
+    reg clear_outputs;
+
+    //buffer for the most recient input
+    reg [31:0] inbuf, next_inbuf;     
+
+    //ask for the Floating-Point Multiply-Accumulate module to be run
+    reg run_fmac;
+
+    //tracks the row/column location of weight matrix values headed to the fmac
+    reg [31:0]  i, next_i;
+    reg [31:0]  j, next_j;
+
+    //tracks the row/column local of returning fmac values 
+    reg [31:0] rxi, rxj;
+    
+    //signal when the last values has been recieved from the fmac
+    wire rx_done;
+           
+    /////////////////////////////////////////////
+    //
+    // Floating Point Multiply Accumulate (FMAC)
+    //
+    /////////////////////////////////////////////
+
+    wire [31:0] fmac_tdata;
+    wire        fmac_tvalid; 
+
+    axis_fmac fmac0(
+        .clk, 
+
+        .A_TDATA(weights[i][j]),
+        .A_TVALID(run_fmac), 
+
+        .B_TDATA(inbuf), 
+        .B_TVALID(run_fmac),
+
+        .C_TDATA(outputs[j]), 
+        .C_TVALID(run_fmac), 
+
+        .OUT_TDATA(fmac_tdata), 
+        .OUT_TVALID(fmac_tvalid)
+
+        );
+
+
+
+
+    /////////////////////////////////////////////
+    //
+    // Input Vector Receive +
+    // Send-to-FPU Control  + 
+    // Output Vector Transmit
+    //
+    /////////////////////////////////////////////
+
+    
+    //FMAC has a 8 cycle latency 
+    localparam FMAC_DELAY = 8; 
+    //a timer to track the FPU delays
+    localparam TIMER_SZ = $clog2(FMAC_DELAY + 1);
+    reg [TIMER_SZ-1:0] fpu_timer, next_fpu_timer; 
+
+    // STATES
+    enum { ST_IDLE, ST_RUN_FMAC, ST_WAIT_FMAC, ST_STEP_ROW, 
+                    ST_TERM_ROW, ST_OUTPUT } state, next_state;
+
+    //sequential block
+    always_ff@(posedge clk) begin
+
+        if (rst) begin
+            state <= ST_IDLE;
+            fpu_timer <= 'h0; 
+            i <= 0;
+            j <= 0;
+            inbuf <= 32'h0;            
+            
+        end else begin
+            state <= next_state;           
+            fpu_timer <= next_fpu_timer;
+            i <= next_i;
+            j <= next_j;
+            inbuf <= next_inbuf;             
+        end
+    end 
+    
+    //combinational block                
+    always_comb begin        
+        next_state = state;
+        //try to count down if the timer isn't already 0
+        next_fpu_timer = (fpu_timer == 'h0 ? 'h0 : fpu_timer - 'h1);
+
+        next_i = i; 
+        next_j = j;  
+        next_inbuf = inbuf; 
+
+        run_fmac = 'h0;
+
+        clear_outputs = 1'h0;
+
+        //input control
+        INPUT_AXIS_TREADY = 'h0; 
+        
+        //output control
+        OUTPUT_AXIS_TDATA = outputs[j];
+        OUTPUT_AXIS_TLAST = 'h0;
+        OUTPUT_AXIS_TVALID = 'h0;
+    
+        case (state)
+
+            ST_IDLE:  begin
+                INPUT_AXIS_TREADY = 'h1; 
+                //we've got valid data
+                if (INPUT_AXIS_TVALID ) begin
+                    next_i = 0;
+                    next_j = 0;
+                    next_inbuf = INPUT_AXIS_TDATA;
+                    
+                    next_state = ST_RUN_FMAC;
+                end
+                
+            end
+           
+            ST_RUN_FMAC: begin
+                //timer for when the first results are back
+                next_fpu_timer = FMAC_DELAY;
+                run_fmac = 'h1;
+                next_state = ST_WAIT_FMAC; 
+            end
+
+            ST_WAIT_FMAC: begin
+                if (fpu_timer == 0) begin
+                    if (j == COLS - 1) 
+                        next_state = ST_TERM_ROW;
+                    else begin
+                        next_state = ST_STEP_ROW;     
+                    end
+                end
+            end
+
+            ST_STEP_ROW:  begin
+                next_j = j + 1;
+                next_state = ST_RUN_FMAC;
+            end
+
+            ST_TERM_ROW: begin
+            
+                //jump to the next row
+                if (i < ROWS - 1) begin
+                
+                    INPUT_AXIS_TREADY = 'h1;
+                    
+                    if (INPUT_AXIS_TVALID) begin
+                                                                        
+                        next_i = i + 1;
+                        next_j = 0;
+                        
+                        next_inbuf = INPUT_AXIS_TDATA;
+                        next_state = ST_RUN_FMAC;
+                    end
+                
+                end else begin
+                    next_i = 0;
+                    next_j = 0;
+                    next_state = ST_OUTPUT; 
+                end
+             end                         
+            
+             ST_OUTPUT: begin
+                OUTPUT_AXIS_TVALID = 'h1;
+                OUTPUT_AXIS_TLAST = (j == COLS - 1 ? 1'h1 : 1'h0);
+                
+                if ( OUTPUT_AXIS_TREADY ) begin
+                
+                    if (j == COLS-1) begin
+                        //be done
+                        next_j = 0;
+                        clear_outputs = 'h1;
+                        next_state = ST_IDLE;
+                        
+                    end else begin
+                        // transmit the next output vector element 
+                        next_j = j +1;
+                    end
+                end
+            end
+             
+       endcase
+    end
+
+
+    /////////////////////////////////////////////
+    //
+    // Recv from FMAC Control 
+    //
+    /////////////////////////////////////////////
+
+
+always_ff@(posedge clk) begin
+    
+    if (rst) begin
+        rxi <= 0;
+        rxj <= 0;
+        outputs <= '{default:32'h0};
+        
+    end else if (clear_outputs) begin
+        outputs <= '{default:32'h0};
+
+    // this waits until the FPU gives a valid result
+    // then stores it back into the outputs buffer
+    end else if (fmac_tvalid) begin
+        outputs[rxi] <= fmac_tdata;
+        rxi <= ( rxi < COLS -1 ? rxi + 1 : 0);
+        rxj <= ( rxi < COLS -1 ? rxj :
+                    (rxj < ROWS - 1 ? rxj + 1 :
+                                    0 ));
+    end
+end
+
+//we got the last value from the FPU.  
+assign rx_done = fmac_tvalid && (rxi == COLS - 1) && (rxj == ROWS -1);
+
+endmodule
