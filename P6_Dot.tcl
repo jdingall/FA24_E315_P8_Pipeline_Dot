@@ -23,7 +23,6 @@ proc checkRequiredFiles { origin_dir} {
    "${origin_dir}/verilog/vsrc/dot_20_10.sv" \
    "${origin_dir}/verilog/vsrc/axis_dot_20_10.v" \
    "${origin_dir}/verilog/vsrc/axis_fadd.sv" \
-   "${origin_dir}/verilog/timing.xdc" \
    "${origin_dir}/verilog/vtests/dot/tb_dot.sv" \
    "${origin_dir}/verilog/vtests/dot/tb_dot_behav.wcfg" \
    "${origin_dir}/verilog/vtests/dot_20_10/dot_20_10_tb.sv" \
@@ -124,7 +123,9 @@ set proj_dir [get_property directory [current_project]]
 # Set project properties
 set obj [current_project]
 set_property -name "board_part" -value "www.digilentinc.com:pynq-z1:part0:1.0" -objects $obj
+set_property -name "corecontainer.enable" -value "1" -objects $obj
 set_property -name "default_lib" -value "xil_defaultlib" -objects $obj
+set_property -name "enable_core_container" -value "1" -objects $obj
 set_property -name "enable_vhdl_2008" -value "1" -objects $obj
 set_property -name "ip_cache_permissions" -value "read write" -objects $obj
 set_property -name "ip_output_repo" -value "$proj_dir/${_xil_proj_name_}.cache/ip" -objects $obj
@@ -140,7 +141,7 @@ set_property -name "webtalk.questa_export_sim" -value "1" -objects $obj
 set_property -name "webtalk.riviera_export_sim" -value "1" -objects $obj
 set_property -name "webtalk.vcs_export_sim" -value "1" -objects $obj
 set_property -name "webtalk.xsim_export_sim" -value "1" -objects $obj
-set_property -name "webtalk.xsim_launch_sim" -value "130" -objects $obj
+set_property -name "webtalk.xsim_launch_sim" -value "148" -objects $obj
 set_property -name "xpm_libraries" -value "XPM_CDC XPM_FIFO XPM_MEMORY" -objects $obj
 
 # Create 'sources_1' fileset (if not found)
@@ -197,18 +198,10 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 # Set 'constrs_1' fileset object
 set obj [get_filesets constrs_1]
 
-# Add/Import constrs file and set constrs file properties
-set file "[file normalize "$origin_dir/verilog/timing.xdc"]"
-set file_added [add_files -norecurse -fileset $obj [list $file]]
-set file "$origin_dir/verilog/timing.xdc"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
-set_property -name "file_type" -value "XDC" -objects $file_obj
+# Empty (no sources present)
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
-set_property -name "target_constrs_file" -value "[file normalize "$origin_dir/verilog/timing.xdc"]" -objects $obj
-set_property -name "target_ucf" -value "[file normalize "$origin_dir/verilog/timing.xdc"]" -objects $obj
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {
@@ -280,7 +273,8 @@ set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 # Set 'sim_axis_dot_20_10' fileset properties
 set obj [get_filesets sim_axis_dot_20_10]
 set_property -name "hbs.configure_design_for_hier_access" -value "1" -objects $obj
-set_property -name "top" -value "tb_dot" -objects $obj
+set_property -name "top" -value "dot_20_10_tb" -objects $obj
+set_property -name "top_auto_set" -value "0" -objects $obj
 set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
 
 # Set 'utils_1' fileset object
@@ -1452,43 +1446,42 @@ proc cr_bd_bd_fpga { parentCell } {
   # Perform GUI Layout
   regenerate_bd_layout -layout_string {
    "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"0.738276",
-   "Default View_TopLeft":"267,15",
+   "Default View_ScaleFactor":"0.419002",
+   "Default View_TopLeft":"0,-155",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
 #  -string -flagsOSRD
-preplace port DDR -pg 1 -lvl 7 -x 2200 -y 290 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -lvl 7 -x 2200 -y 310 -defaultsOSRD
-preplace inst axis_data_fifo_0 -pg 1 -lvl 3 -x 900 -y 330 -defaultsOSRD
-preplace inst processing_system7_0 -pg 1 -lvl 6 -x 1940 -y 340 -defaultsOSRD
-preplace inst axi_dma_0 -pg 1 -lvl 4 -x 1250 -y 360 -defaultsOSRD
-preplace inst smartconnect_0 -pg 1 -lvl 5 -x 1580 -y 330 -defaultsOSRD
+preplace port DDR -pg 1 -lvl 7 -x 2170 -y 290 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -lvl 7 -x 2170 -y 310 -defaultsOSRD
+preplace inst axis_data_fifo_0 -pg 1 -lvl 3 -x 890 -y 330 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 6 -x 1920 -y 340 -defaultsOSRD
+preplace inst axi_dma_0 -pg 1 -lvl 4 -x 1230 -y 360 -defaultsOSRD
+preplace inst smartconnect_0 -pg 1 -lvl 5 -x 1560 -y 330 -defaultsOSRD
 preplace inst rst_ps7_0_100M -pg 1 -lvl 1 -x 200 -y 380 -defaultsOSRD
-preplace inst ps7_0_axi_periph -pg 1 -lvl 3 -x 900 -y 130 -defaultsOSRD
+preplace inst ps7_0_axi_periph -pg 1 -lvl 3 -x 890 -y 130 -defaultsOSRD
 preplace inst axis_dot_20_10_0 -pg 1 -lvl 2 -x 560 -y 330 -defaultsOSRD
-preplace netloc processing_system7_0_FCLK_CLK0 1 0 7 20 280 380 250 730 250 1060 250 1440 250 1720 450 2170
-preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 7 20 480 NJ 480 730J 470 NJ 470 NJ 470 NJ 470 2160
-preplace netloc rst_ps7_0_100M_peripheral_aresetn 1 1 3 390 410 740 410 NJ
+preplace netloc processing_system7_0_FCLK_CLK0 1 0 7 20 280 390 420 740 410 1040 470 1420 410 1700 450 2150
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 7 20 480 NJ 480 NJ 480 NJ 480 NJ 480 NJ 480 2140
+preplace netloc rst_ps7_0_100M_peripheral_aresetn 1 1 3 380 410 730 420 1050J
 preplace netloc processing_system7_0_DDR 1 6 1 NJ 290
-preplace netloc ps7_0_axi_periph_M00_AXI 1 3 1 1050 130n
-preplace netloc processing_system7_0_M_AXI_GP0 1 2 5 750 480 NJ 480 NJ 480 NJ 480 2180
+preplace netloc ps7_0_axi_periph_M00_AXI 1 3 1 1040 130n
+preplace netloc processing_system7_0_M_AXI_GP0 1 2 5 740 10 NJ 10 NJ 10 NJ 10 2150
 preplace netloc axi_dma_0_M_AXI 1 4 1 N 310
 preplace netloc axis_data_fifo_0_M_AXIS 1 3 1 N 330
 preplace netloc processing_system7_0_FIXED_IO 1 6 1 NJ 310
-preplace netloc axi_dma_0_M_AXIS_MM2S 1 1 4 390 10 NJ 10 NJ 10 1430
+preplace netloc axi_dma_0_M_AXIS_MM2S 1 1 4 400 250 NJ 250 NJ 250 1410
 preplace netloc smartconnect_0_M00_AXI 1 5 1 N 330
 preplace netloc axis_dot_20_10_0_OUTPUT_AXIS 1 2 1 720 310n
-levelinfo -pg 1 0 200 560 900 1250 1580 1940 2200
-pagesize -pg 1 -db -bbox -sgen 0 0 2320 490
+levelinfo -pg 1 0 200 560 890 1230 1560 1920 2170
+pagesize -pg 1 -db -bbox -sgen 0 0 2290 490
 "
 }
 
   # Restore current instance
   current_bd_instance $oldCurInst
 
+  validate_bd_design
   save_bd_design
-common::send_gid_msg -ssname BD::TCL -id 2050 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
-
   close_bd_design $design_name 
 }
 # End of cr_bd_bd_fpga()
