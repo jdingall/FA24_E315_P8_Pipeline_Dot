@@ -53,11 +53,12 @@ class Helper():
             return
 
         command = 'vivado -mode batch -source ' + self.J['Proj'] + '.tcl'
+        fixup = 'vivado -mode batch -source tcl/fixup.tcl'
 
         if self.vivado != None:
             print ("vivado specified from command line")
             command = command.replace('vivado', self.vivado)
-
+            fixup = fixup.replace('vivado', self.vivado)
         elif shutil.which('vivado') != None:
             print ("Found Vivado")
         else:
@@ -65,6 +66,10 @@ class Helper():
 
         print ("Building Vivado Project")
         self.run_command(command) 
+
+        if os.path.exists( self.MY_DIR + '/tcl/fixup.tcl'):
+            print ("Found extra fixup tcl script, running")
+            self.run_command(fixup)
 
     def impl_vivado(self, num_cores = 1):
         #sanity check
