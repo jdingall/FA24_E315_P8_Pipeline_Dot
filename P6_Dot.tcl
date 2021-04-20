@@ -26,6 +26,7 @@ proc checkRequiredFiles { origin_dir} {
    "${origin_dir}/verilog/vtests/dot/tb_dot.sv" \
    "${origin_dir}/verilog/vtests/dot/tb_dot_behav.wcfg" \
    "${origin_dir}/verilog/vtests/dot_20_10/dot_20_10_tb.sv" \
+   "${origin_dir}/verilog/vtests/fmac/axis_fmac_tb.sv" \
   ]
   foreach ifile $files {
     if { ![file isfile $ifile] } {
@@ -134,14 +135,15 @@ set_property -name "platform.board_id" -value "pynq-z1" -objects $obj
 set_property -name "sim.central_dir" -value "$proj_dir/${_xil_proj_name_}.ip_user_files" -objects $obj
 set_property -name "sim.ip.auto_export_scripts" -value "1" -objects $obj
 set_property -name "simulator_language" -value "Mixed" -objects $obj
-set_property -name "webtalk.activehdl_export_sim" -value "1" -objects $obj
-set_property -name "webtalk.ies_export_sim" -value "1" -objects $obj
-set_property -name "webtalk.modelsim_export_sim" -value "1" -objects $obj
-set_property -name "webtalk.questa_export_sim" -value "1" -objects $obj
-set_property -name "webtalk.riviera_export_sim" -value "1" -objects $obj
-set_property -name "webtalk.vcs_export_sim" -value "1" -objects $obj
-set_property -name "webtalk.xsim_export_sim" -value "1" -objects $obj
-set_property -name "webtalk.xsim_launch_sim" -value "148" -objects $obj
+set_property -name "webtalk.activehdl_export_sim" -value "3" -objects $obj
+set_property -name "webtalk.ies_export_sim" -value "3" -objects $obj
+set_property -name "webtalk.modelsim_export_sim" -value "3" -objects $obj
+set_property -name "webtalk.questa_export_sim" -value "3" -objects $obj
+set_property -name "webtalk.riviera_export_sim" -value "3" -objects $obj
+set_property -name "webtalk.vcs_export_sim" -value "3" -objects $obj
+set_property -name "webtalk.xcelium_export_sim" -value "2" -objects $obj
+set_property -name "webtalk.xsim_export_sim" -value "3" -objects $obj
+set_property -name "webtalk.xsim_launch_sim" -value "150" -objects $obj
 set_property -name "xpm_libraries" -value "XPM_CDC XPM_FIFO XPM_MEMORY" -objects $obj
 
 # Create 'sources_1' fileset (if not found)
@@ -216,6 +218,7 @@ set obj [get_filesets sim_1]
 set obj [get_filesets sim_1]
 set_property -name "hbs.configure_design_for_hier_access" -value "1" -objects $obj
 set_property -name "top" -value "axis_dot_20_10" -objects $obj
+set_property -name "top_auto_set" -value "0" -objects $obj
 set_property -name "top_file" -value "verilog/vsrc/axis_dot_20_10.v" -objects $obj
 set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
 
@@ -246,6 +249,7 @@ set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 set obj [get_filesets sim_dot]
 set_property -name "hbs.configure_design_for_hier_access" -value "1" -objects $obj
 set_property -name "top" -value "tb_dot" -objects $obj
+set_property -name "top_auto_set" -value "0" -objects $obj
 set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
 
 # Create 'sim_axis_dot_20_10' fileset (if not found)
@@ -274,6 +278,35 @@ set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
 set obj [get_filesets sim_axis_dot_20_10]
 set_property -name "hbs.configure_design_for_hier_access" -value "1" -objects $obj
 set_property -name "top" -value "dot_20_10_tb" -objects $obj
+set_property -name "top_auto_set" -value "0" -objects $obj
+set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
+
+# Create 'sim_fmac' fileset (if not found)
+if {[string equal [get_filesets -quiet sim_fmac] ""]} {
+  create_fileset -simset sim_fmac
+}
+
+# Set 'sim_fmac' fileset object
+set obj [get_filesets sim_fmac]
+set files [list \
+ [file normalize "${origin_dir}/verilog/vtests/fmac/axis_fmac_tb.sv"] \
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sim_fmac' fileset file properties for remote files
+set file "$origin_dir/verilog/vtests/fmac/axis_fmac_tb.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_fmac] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+
+# Set 'sim_fmac' fileset file properties for local files
+# None
+
+# Set 'sim_fmac' fileset properties
+set obj [get_filesets sim_fmac]
+set_property -name "hbs.configure_design_for_hier_access" -value "1" -objects $obj
+set_property -name "top" -value "axis_fmac_tb" -objects $obj
 set_property -name "top_auto_set" -value "0" -objects $obj
 set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
 
@@ -457,7 +490,7 @@ set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files bd_fmac.bd ]
 make_wrapper -files [get_files bd_fmac.bd] -import -top
 
 if { [get_files bd_fmac_wrapper.v] == "" } {
-  import_files -quiet -fileset sources_1 /home/lukefahr/e315/P6_Dot/verilog/vsrc/bd_fmac/hdl/bd_fmac_wrapper.v
+  import_files -quiet -fileset sources_1 /home/lukefahr/e315/P6_Dot/vivado_project/vivado_project.srcs/sources_1/imports/hdl/bd_fmac_wrapper.v
 }
 if { [get_files axis_fmac.sv] == "" } {
   import_files -quiet -fileset sources_1 /home/lukefahr/e315/P6_Dot/verilog/vsrc/axis_fmac.sv
@@ -590,7 +623,6 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.c_include_sg {0} \
    CONFIG.c_mm2s_burst_size {256} \
    CONFIG.c_s2mm_burst_size {256} \
-   CONFIG.c_sg_include_stscntrl_strm {0} \
    CONFIG.c_single_interface {1} \
  ] $axi_dma_0
 
@@ -643,27 +675,16 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_APU_CLK_RATIO_ENABLE {6:2:1} \
    CONFIG.PCW_APU_PERIPHERAL_FREQMHZ {650} \
    CONFIG.PCW_ARMPLL_CTRL_FBDIV {26} \
-   CONFIG.PCW_CAN0_BASEADDR {0xE0008000} \
-   CONFIG.PCW_CAN0_HIGHADDR {0xE0008FFF} \
    CONFIG.PCW_CAN0_PERIPHERAL_CLKSRC {External} \
-   CONFIG.PCW_CAN0_PERIPHERAL_FREQMHZ {-1} \
-   CONFIG.PCW_CAN1_BASEADDR {0xE0009000} \
-   CONFIG.PCW_CAN1_HIGHADDR {0xE0009FFF} \
    CONFIG.PCW_CAN1_PERIPHERAL_CLKSRC {External} \
-   CONFIG.PCW_CAN1_PERIPHERAL_FREQMHZ {-1} \
    CONFIG.PCW_CAN_PERIPHERAL_CLKSRC {IO PLL} \
    CONFIG.PCW_CAN_PERIPHERAL_DIVISOR0 {1} \
    CONFIG.PCW_CAN_PERIPHERAL_DIVISOR1 {1} \
-   CONFIG.PCW_CAN_PERIPHERAL_FREQMHZ {100} \
    CONFIG.PCW_CAN_PERIPHERAL_VALID {0} \
    CONFIG.PCW_CLK0_FREQ {100000000} \
    CONFIG.PCW_CLK1_FREQ {10000000} \
    CONFIG.PCW_CLK2_FREQ {10000000} \
    CONFIG.PCW_CLK3_FREQ {10000000} \
-   CONFIG.PCW_CORE0_FIQ_INTR {0} \
-   CONFIG.PCW_CORE0_IRQ_INTR {0} \
-   CONFIG.PCW_CORE1_FIQ_INTR {0} \
-   CONFIG.PCW_CORE1_IRQ_INTR {0} \
    CONFIG.PCW_CPU_CPU_6X4X_MAX_RANGE {667} \
    CONFIG.PCW_CPU_CPU_PLL_FREQMHZ {1300.000} \
    CONFIG.PCW_CPU_PERIPHERAL_CLKSRC {ARM PLL} \
@@ -702,9 +723,7 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_ENET0_PERIPHERAL_FREQMHZ {1000 Mbps} \
    CONFIG.PCW_ENET0_RESET_ENABLE {1} \
    CONFIG.PCW_ENET0_RESET_IO {MIO 9} \
-   CONFIG.PCW_ENET1_BASEADDR {0xE000C000} \
    CONFIG.PCW_ENET1_GRP_MDIO_ENABLE {0} \
-   CONFIG.PCW_ENET1_HIGHADDR {0xE000CFFF} \
    CONFIG.PCW_ENET1_PERIPHERAL_CLKSRC {IO PLL} \
    CONFIG.PCW_ENET1_PERIPHERAL_DIVISOR0 {1} \
    CONFIG.PCW_ENET1_PERIPHERAL_DIVISOR1 {1} \
@@ -805,27 +824,19 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_FPGA_FCLK3_ENABLE {0} \
    CONFIG.PCW_GPIO_BASEADDR {0xE000A000} \
    CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {0} \
-   CONFIG.PCW_GPIO_EMIO_GPIO_WIDTH {64} \
    CONFIG.PCW_GPIO_HIGHADDR {0xE000AFFF} \
    CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1} \
    CONFIG.PCW_GPIO_MIO_GPIO_IO {MIO} \
    CONFIG.PCW_GPIO_PERIPHERAL_ENABLE {0} \
-   CONFIG.PCW_I2C0_BASEADDR {0xE0004000} \
-   CONFIG.PCW_I2C0_HIGHADDR {0xE0004FFF} \
    CONFIG.PCW_I2C0_RESET_ENABLE {0} \
-   CONFIG.PCW_I2C1_BASEADDR {0xE0005000} \
-   CONFIG.PCW_I2C1_HIGHADDR {0xE0005FFF} \
    CONFIG.PCW_I2C1_RESET_ENABLE {0} \
    CONFIG.PCW_I2C_PERIPHERAL_FREQMHZ {25} \
    CONFIG.PCW_I2C_RESET_ENABLE {1} \
    CONFIG.PCW_I2C_RESET_POLARITY {Active Low} \
    CONFIG.PCW_IMPORT_BOARD_PRESET {None} \
    CONFIG.PCW_INCLUDE_ACP_TRANS_CHECK {0} \
-   CONFIG.PCW_INCLUDE_TRACE_BUFFER {0} \
    CONFIG.PCW_IOPLL_CTRL_FBDIV {20} \
    CONFIG.PCW_IO_IO_PLL_FREQMHZ {1000.000} \
-   CONFIG.PCW_IRQ_F2P_INTR {0} \
-   CONFIG.PCW_IRQ_F2P_MODE {DIRECT} \
    CONFIG.PCW_MIO_0_DIRECTION {inout} \
    CONFIG.PCW_MIO_0_IOTYPE {LVCMOS 3.3V} \
    CONFIG.PCW_MIO_0_PULLUP {enabled} \
@@ -1076,10 +1087,6 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_M_AXI_GP0_ID_WIDTH {12} \
    CONFIG.PCW_M_AXI_GP0_SUPPORT_NARROW_BURST {0} \
    CONFIG.PCW_M_AXI_GP0_THREAD_ID_WIDTH {12} \
-   CONFIG.PCW_M_AXI_GP1_ENABLE_STATIC_REMAP {0} \
-   CONFIG.PCW_M_AXI_GP1_ID_WIDTH {12} \
-   CONFIG.PCW_M_AXI_GP1_SUPPORT_NARROW_BURST {0} \
-   CONFIG.PCW_M_AXI_GP1_THREAD_ID_WIDTH {12} \
    CONFIG.PCW_NAND_CYCLES_T_AR {1} \
    CONFIG.PCW_NAND_CYCLES_T_CLR {1} \
    CONFIG.PCW_NAND_CYCLES_T_RC {11} \
@@ -1125,33 +1132,6 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_NOR_SRAM_CS1_T_WP {1} \
    CONFIG.PCW_NOR_SRAM_CS1_WE_TIME {0} \
    CONFIG.PCW_OVERRIDE_BASIC_CLOCK {0} \
-   CONFIG.PCW_P2F_CAN0_INTR {0} \
-   CONFIG.PCW_P2F_CAN1_INTR {0} \
-   CONFIG.PCW_P2F_CTI_INTR {0} \
-   CONFIG.PCW_P2F_DMAC0_INTR {0} \
-   CONFIG.PCW_P2F_DMAC1_INTR {0} \
-   CONFIG.PCW_P2F_DMAC2_INTR {0} \
-   CONFIG.PCW_P2F_DMAC3_INTR {0} \
-   CONFIG.PCW_P2F_DMAC4_INTR {0} \
-   CONFIG.PCW_P2F_DMAC5_INTR {0} \
-   CONFIG.PCW_P2F_DMAC6_INTR {0} \
-   CONFIG.PCW_P2F_DMAC7_INTR {0} \
-   CONFIG.PCW_P2F_DMAC_ABORT_INTR {0} \
-   CONFIG.PCW_P2F_ENET0_INTR {0} \
-   CONFIG.PCW_P2F_ENET1_INTR {0} \
-   CONFIG.PCW_P2F_GPIO_INTR {0} \
-   CONFIG.PCW_P2F_I2C0_INTR {0} \
-   CONFIG.PCW_P2F_I2C1_INTR {0} \
-   CONFIG.PCW_P2F_QSPI_INTR {0} \
-   CONFIG.PCW_P2F_SDIO0_INTR {0} \
-   CONFIG.PCW_P2F_SDIO1_INTR {0} \
-   CONFIG.PCW_P2F_SMC_INTR {0} \
-   CONFIG.PCW_P2F_SPI0_INTR {0} \
-   CONFIG.PCW_P2F_SPI1_INTR {0} \
-   CONFIG.PCW_P2F_UART0_INTR {0} \
-   CONFIG.PCW_P2F_UART1_INTR {0} \
-   CONFIG.PCW_P2F_USB0_INTR {0} \
-   CONFIG.PCW_P2F_USB1_INTR {0} \
    CONFIG.PCW_PACKAGE_DDR_BOARD_DELAY0 {0.223} \
    CONFIG.PCW_PACKAGE_DDR_BOARD_DELAY1 {0.212} \
    CONFIG.PCW_PACKAGE_DDR_BOARD_DELAY2 {0.085} \
@@ -1193,8 +1173,6 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_SD1_PERIPHERAL_ENABLE {0} \
    CONFIG.PCW_SDIO0_BASEADDR {0xE0100000} \
    CONFIG.PCW_SDIO0_HIGHADDR {0xE0100FFF} \
-   CONFIG.PCW_SDIO1_BASEADDR {0xE0101000} \
-   CONFIG.PCW_SDIO1_HIGHADDR {0xE0101FFF} \
    CONFIG.PCW_SDIO_PERIPHERAL_CLKSRC {IO PLL} \
    CONFIG.PCW_SDIO_PERIPHERAL_DIVISOR0 {20} \
    CONFIG.PCW_SDIO_PERIPHERAL_FREQMHZ {50} \
@@ -1209,44 +1187,22 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_SMC_CYCLE_T6 {NA} \
    CONFIG.PCW_SMC_PERIPHERAL_CLKSRC {IO PLL} \
    CONFIG.PCW_SMC_PERIPHERAL_DIVISOR0 {1} \
-   CONFIG.PCW_SMC_PERIPHERAL_FREQMHZ {100} \
    CONFIG.PCW_SMC_PERIPHERAL_VALID {0} \
-   CONFIG.PCW_SPI0_BASEADDR {0xE0006000} \
    CONFIG.PCW_SPI0_GRP_SS0_ENABLE {0} \
    CONFIG.PCW_SPI0_GRP_SS1_ENABLE {0} \
    CONFIG.PCW_SPI0_GRP_SS2_ENABLE {0} \
-   CONFIG.PCW_SPI0_HIGHADDR {0xE0006FFF} \
    CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {0} \
-   CONFIG.PCW_SPI1_BASEADDR {0xE0007000} \
    CONFIG.PCW_SPI1_GRP_SS0_ENABLE {0} \
    CONFIG.PCW_SPI1_GRP_SS1_ENABLE {0} \
    CONFIG.PCW_SPI1_GRP_SS2_ENABLE {0} \
-   CONFIG.PCW_SPI1_HIGHADDR {0xE0007FFF} \
    CONFIG.PCW_SPI1_PERIPHERAL_ENABLE {0} \
    CONFIG.PCW_SPI_PERIPHERAL_CLKSRC {IO PLL} \
    CONFIG.PCW_SPI_PERIPHERAL_DIVISOR0 {1} \
-   CONFIG.PCW_SPI_PERIPHERAL_FREQMHZ {166.666666} \
    CONFIG.PCW_SPI_PERIPHERAL_VALID {0} \
-   CONFIG.PCW_S_AXI_ACP_ARUSER_VAL {31} \
-   CONFIG.PCW_S_AXI_ACP_AWUSER_VAL {31} \
-   CONFIG.PCW_S_AXI_ACP_ID_WIDTH {3} \
-   CONFIG.PCW_S_AXI_GP0_ID_WIDTH {6} \
-   CONFIG.PCW_S_AXI_GP1_ID_WIDTH {6} \
    CONFIG.PCW_S_AXI_HP0_DATA_WIDTH {64} \
    CONFIG.PCW_S_AXI_HP0_ID_WIDTH {6} \
-   CONFIG.PCW_S_AXI_HP1_DATA_WIDTH {64} \
-   CONFIG.PCW_S_AXI_HP1_ID_WIDTH {6} \
-   CONFIG.PCW_S_AXI_HP2_DATA_WIDTH {64} \
-   CONFIG.PCW_S_AXI_HP2_ID_WIDTH {6} \
-   CONFIG.PCW_S_AXI_HP3_DATA_WIDTH {64} \
-   CONFIG.PCW_S_AXI_HP3_ID_WIDTH {6} \
    CONFIG.PCW_TPIU_PERIPHERAL_CLKSRC {External} \
    CONFIG.PCW_TPIU_PERIPHERAL_DIVISOR0 {1} \
-   CONFIG.PCW_TPIU_PERIPHERAL_FREQMHZ {200} \
-   CONFIG.PCW_TRACE_BUFFER_CLOCK_DELAY {12} \
-   CONFIG.PCW_TRACE_BUFFER_FIFO_SIZE {128} \
-   CONFIG.PCW_TRACE_PIPELINE_WIDTH {8} \
-   CONFIG.PCW_TTC0_BASEADDR {0xE0104000} \
    CONFIG.PCW_TTC0_CLK0_PERIPHERAL_CLKSRC {CPU_1X} \
    CONFIG.PCW_TTC0_CLK0_PERIPHERAL_DIVISOR0 {1} \
    CONFIG.PCW_TTC0_CLK0_PERIPHERAL_FREQMHZ {133.333333} \
@@ -1256,8 +1212,6 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_TTC0_CLK2_PERIPHERAL_CLKSRC {CPU_1X} \
    CONFIG.PCW_TTC0_CLK2_PERIPHERAL_DIVISOR0 {1} \
    CONFIG.PCW_TTC0_CLK2_PERIPHERAL_FREQMHZ {133.333333} \
-   CONFIG.PCW_TTC0_HIGHADDR {0xE0104fff} \
-   CONFIG.PCW_TTC1_BASEADDR {0xE0105000} \
    CONFIG.PCW_TTC1_CLK0_PERIPHERAL_CLKSRC {CPU_1X} \
    CONFIG.PCW_TTC1_CLK0_PERIPHERAL_DIVISOR0 {1} \
    CONFIG.PCW_TTC1_CLK0_PERIPHERAL_FREQMHZ {133.333333} \
@@ -1267,18 +1221,13 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_TTC1_CLK2_PERIPHERAL_CLKSRC {CPU_1X} \
    CONFIG.PCW_TTC1_CLK2_PERIPHERAL_DIVISOR0 {1} \
    CONFIG.PCW_TTC1_CLK2_PERIPHERAL_FREQMHZ {133.333333} \
-   CONFIG.PCW_TTC1_HIGHADDR {0xE0105fff} \
-   CONFIG.PCW_TTC_PERIPHERAL_FREQMHZ {50} \
    CONFIG.PCW_UART0_BASEADDR {0xE0000000} \
    CONFIG.PCW_UART0_BAUD_RATE {115200} \
    CONFIG.PCW_UART0_GRP_FULL_ENABLE {0} \
    CONFIG.PCW_UART0_HIGHADDR {0xE0000FFF} \
    CONFIG.PCW_UART0_PERIPHERAL_ENABLE {1} \
    CONFIG.PCW_UART0_UART0_IO {MIO 14 .. 15} \
-   CONFIG.PCW_UART1_BASEADDR {0xE0001000} \
-   CONFIG.PCW_UART1_BAUD_RATE {115200} \
    CONFIG.PCW_UART1_GRP_FULL_ENABLE {0} \
-   CONFIG.PCW_UART1_HIGHADDR {0xE0001FFF} \
    CONFIG.PCW_UART1_PERIPHERAL_ENABLE {0} \
    CONFIG.PCW_UART_PERIPHERAL_CLKSRC {IO PLL} \
    CONFIG.PCW_UART_PERIPHERAL_DIVISOR0 {10} \
@@ -1365,8 +1314,6 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_USB0_RESET_ENABLE {1} \
    CONFIG.PCW_USB0_RESET_IO {MIO 46} \
    CONFIG.PCW_USB0_USB0_IO {MIO 28 .. 39} \
-   CONFIG.PCW_USB1_BASEADDR {0xE0103000} \
-   CONFIG.PCW_USB1_HIGHADDR {0xE0103fff} \
    CONFIG.PCW_USB1_PERIPHERAL_ENABLE {0} \
    CONFIG.PCW_USB1_PERIPHERAL_FREQMHZ {60} \
    CONFIG.PCW_USB1_RESET_ENABLE {0} \
@@ -1380,13 +1327,11 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_USE_CR_FABRIC {1} \
    CONFIG.PCW_USE_DDR_BYPASS {0} \
    CONFIG.PCW_USE_DEBUG {0} \
-   CONFIG.PCW_USE_DEFAULT_ACP_USER_VAL {0} \
    CONFIG.PCW_USE_DMA0 {0} \
    CONFIG.PCW_USE_DMA1 {0} \
    CONFIG.PCW_USE_DMA2 {0} \
    CONFIG.PCW_USE_DMA3 {0} \
    CONFIG.PCW_USE_EXPANDED_IOP {0} \
-   CONFIG.PCW_USE_EXPANDED_PS_SLCR_REGISTERS {0} \
    CONFIG.PCW_USE_FABRIC_INTERRUPT {0} \
    CONFIG.PCW_USE_HIGH_OCM {0} \
    CONFIG.PCW_USE_M_AXI_GP0 {1} \
@@ -1401,7 +1346,6 @@ proc cr_bd_bd_fpga { parentCell } {
    CONFIG.PCW_USE_S_AXI_HP2 {0} \
    CONFIG.PCW_USE_S_AXI_HP3 {0} \
    CONFIG.PCW_USE_TRACE {0} \
-   CONFIG.PCW_USE_TRACE_DATA_EDGE_DETECTOR {0} \
    CONFIG.PCW_VALUE_SILVERSION {3} \
    CONFIG.PCW_WDT_PERIPHERAL_CLKSRC {CPU_1X} \
    CONFIG.PCW_WDT_PERIPHERAL_DIVISOR0 {1} \
@@ -1446,42 +1390,43 @@ proc cr_bd_bd_fpga { parentCell } {
   # Perform GUI Layout
   regenerate_bd_layout -layout_string {
    "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"0.419002",
-   "Default View_TopLeft":"0,-155",
+   "Default View_ScaleFactor":"0.331874",
+   "Default View_TopLeft":"-9,-497",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
 #  -string -flagsOSRD
 preplace port DDR -pg 1 -lvl 7 -x 2170 -y 290 -defaultsOSRD
 preplace port FIXED_IO -pg 1 -lvl 7 -x 2170 -y 310 -defaultsOSRD
-preplace inst axis_data_fifo_0 -pg 1 -lvl 3 -x 890 -y 330 -defaultsOSRD
-preplace inst processing_system7_0 -pg 1 -lvl 6 -x 1920 -y 340 -defaultsOSRD
-preplace inst axi_dma_0 -pg 1 -lvl 4 -x 1230 -y 360 -defaultsOSRD
-preplace inst smartconnect_0 -pg 1 -lvl 5 -x 1560 -y 330 -defaultsOSRD
-preplace inst rst_ps7_0_100M -pg 1 -lvl 1 -x 200 -y 380 -defaultsOSRD
-preplace inst ps7_0_axi_periph -pg 1 -lvl 3 -x 890 -y 130 -defaultsOSRD
-preplace inst axis_dot_20_10_0 -pg 1 -lvl 2 -x 560 -y 330 -defaultsOSRD
-preplace netloc processing_system7_0_FCLK_CLK0 1 0 7 20 280 390 420 740 410 1040 470 1420 410 1700 450 2150
-preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 7 20 480 NJ 480 NJ 480 NJ 480 NJ 480 NJ 480 2140
-preplace netloc rst_ps7_0_100M_peripheral_aresetn 1 1 3 380 410 730 420 1050J
+preplace inst axis_data_fifo_0 -pg 1 -lvl 3 -x 880 -y 330 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 6 -x 1910 -y 340 -defaultsOSRD
+preplace inst axi_dma_0 -pg 1 -lvl 4 -x 1220 -y 360 -defaultsOSRD
+preplace inst smartconnect_0 -pg 1 -lvl 5 -x 1550 -y 330 -defaultsOSRD
+preplace inst rst_ps7_0_100M -pg 1 -lvl 1 -x 190 -y 380 -defaultsOSRD
+preplace inst ps7_0_axi_periph -pg 1 -lvl 3 -x 880 -y 130 -defaultsOSRD
+preplace inst axis_dot_20_10_0 -pg 1 -lvl 2 -x 540 -y 330 -defaultsOSRD
+preplace netloc processing_system7_0_FCLK_CLK0 1 0 7 10 280 370 250 710 250 1040 250 1410 250 1690 450 2140
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 7 10 480 NJ 480 710J 470 NJ 470 NJ 470 NJ 470 2130
+preplace netloc rst_ps7_0_100M_peripheral_aresetn 1 1 3 380 410 720 410 NJ
 preplace netloc processing_system7_0_DDR 1 6 1 NJ 290
-preplace netloc ps7_0_axi_periph_M00_AXI 1 3 1 1040 130n
-preplace netloc processing_system7_0_M_AXI_GP0 1 2 5 740 10 NJ 10 NJ 10 NJ 10 2150
+preplace netloc ps7_0_axi_periph_M00_AXI 1 3 1 1030 130n
+preplace netloc processing_system7_0_M_AXI_GP0 1 2 5 730 480 NJ 480 NJ 480 NJ 480 2150
 preplace netloc axi_dma_0_M_AXI 1 4 1 N 310
 preplace netloc axis_data_fifo_0_M_AXIS 1 3 1 N 330
 preplace netloc processing_system7_0_FIXED_IO 1 6 1 NJ 310
-preplace netloc axi_dma_0_M_AXIS_MM2S 1 1 4 400 250 NJ 250 NJ 250 1410
+preplace netloc axi_dma_0_M_AXIS_MM2S 1 1 4 380 10 NJ 10 NJ 10 1400
 preplace netloc smartconnect_0_M00_AXI 1 5 1 N 330
-preplace netloc axis_dot_20_10_0_OUTPUT_AXIS 1 2 1 720 310n
-levelinfo -pg 1 0 200 560 890 1230 1560 1920 2170
-pagesize -pg 1 -db -bbox -sgen 0 0 2290 490
+preplace netloc axis_dot_20_10_0_OUTPUT_AXIS 1 2 1 700 310n
+levelinfo -pg 1 -10 190 540 880 1220 1550 1910 2170
+pagesize -pg 1 -db -bbox -sgen -10 0 2290 490
 "
 }
 
   # Restore current instance
   current_bd_instance $oldCurInst
 
-  validate_bd_design
   save_bd_design
+common::send_gid_msg -ssname BD::TCL -id 2050 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
+
   close_bd_design $design_name 
 }
 # End of cr_bd_bd_fpga()
@@ -1492,153 +1437,6 @@ set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files bd_fpga.bd ]
 
 # Create wrapper file for bd_fpga.bd
 make_wrapper -files [get_files bd_fpga.bd] -import -top
-
-
-
-# Proc to create BD bd_fadd
-proc cr_bd_bd_fadd { parentCell } {
-
-  # CHANGE DESIGN NAME HERE
-  set design_name bd_fadd
-
-  common::send_gid_msg -ssname BD::TCL -id 2010 -severity "INFO" "Currently there is no design <$design_name> in project, so creating one..."
-
-  create_bd_design $design_name
-
-  set bCheckIPsPassed 1
-  ##################################################################
-  # CHECK IPs
-  ##################################################################
-  set bCheckIPs 1
-  if { $bCheckIPs == 1 } {
-     set list_check_ips "\ 
-  xilinx.com:ip:floating_point:7.1\
-  "
-
-   set list_ips_missing ""
-   common::send_gid_msg -ssname BD::TCL -id 2011 -severity "INFO" "Checking if the following IPs exist in the project's IP catalog: $list_check_ips ."
-
-   foreach ip_vlnv $list_check_ips {
-      set ip_obj [get_ipdefs -all $ip_vlnv]
-      if { $ip_obj eq "" } {
-         lappend list_ips_missing $ip_vlnv
-      }
-   }
-
-   if { $list_ips_missing ne "" } {
-      catch {common::send_gid_msg -ssname BD::TCL -id 2012 -severity "ERROR" "The following IPs are not found in the IP Catalog:\n  $list_ips_missing\n\nResolution: Please add the repository containing the IP(s) to the project." }
-      set bCheckIPsPassed 0
-   }
-
-  }
-
-  if { $bCheckIPsPassed != 1 } {
-    common::send_gid_msg -ssname BD::TCL -id 2023 -severity "WARNING" "Will not continue with creation of design due to the error(s) above."
-    return 3
-  }
-
-  variable script_folder
-
-  if { $parentCell eq "" } {
-     set parentCell [get_bd_cells /]
-  }
-
-  # Get object for parentCell
-  set parentObj [get_bd_cells $parentCell]
-  if { $parentObj == "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
-     return
-  }
-
-  # Make sure parentObj is hier blk
-  set parentType [get_property TYPE $parentObj]
-  if { $parentType ne "hier" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
-     return
-  }
-
-  # Save current instance; Restore later
-  set oldCurInst [current_bd_instance .]
-
-  # Set parent object as current
-  current_bd_instance $parentObj
-
-
-  # Create interface ports
-  set M_AXIS_RESULT_0 [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_RESULT_0 ]
-  set_property -dict [ list \
-   CONFIG.FREQ_HZ {10000000} \
-   ] $M_AXIS_RESULT_0
-
-  set S_AXIS_A_0 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_A_0 ]
-  set_property -dict [ list \
-   CONFIG.FREQ_HZ {10000000} \
-   CONFIG.HAS_TKEEP {0} \
-   CONFIG.HAS_TLAST {1} \
-   CONFIG.HAS_TREADY {1} \
-   CONFIG.HAS_TSTRB {0} \
-   CONFIG.LAYERED_METADATA {undef} \
-   CONFIG.TDATA_NUM_BYTES {4} \
-   CONFIG.TDEST_WIDTH {0} \
-   CONFIG.TID_WIDTH {0} \
-   CONFIG.TUSER_WIDTH {0} \
-   ] $S_AXIS_A_0
-
-  set S_AXIS_B_0 [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_B_0 ]
-  set_property -dict [ list \
-   CONFIG.FREQ_HZ {10000000} \
-   CONFIG.HAS_TKEEP {0} \
-   CONFIG.HAS_TLAST {1} \
-   CONFIG.HAS_TREADY {1} \
-   CONFIG.HAS_TSTRB {0} \
-   CONFIG.LAYERED_METADATA {undef} \
-   CONFIG.TDATA_NUM_BYTES {4} \
-   CONFIG.TDEST_WIDTH {0} \
-   CONFIG.TID_WIDTH {0} \
-   CONFIG.TUSER_WIDTH {0} \
-   ] $S_AXIS_B_0
-
-
-  # Create ports
-  set aclk_0 [ create_bd_port -dir I -type clk -freq_hz 10000000 aclk_0 ]
-
-  # Create instance: floating_point_0, and set properties
-  set floating_point_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:floating_point:7.1 floating_point_0 ]
-  set_property -dict [ list \
-   CONFIG.Add_Sub_Value {Add} \
-   CONFIG.C_Latency {8} \
-   CONFIG.Has_A_TLAST {true} \
-   CONFIG.Has_B_TLAST {true} \
-   CONFIG.Maximum_Latency {false} \
-   CONFIG.RESULT_TLAST_Behv {OR_all_TLASTs} \
- ] $floating_point_0
-
-  # Create interface connections
-  connect_bd_intf_net -intf_net S_AXIS_A_0_1 [get_bd_intf_ports S_AXIS_A_0] [get_bd_intf_pins floating_point_0/S_AXIS_A]
-  connect_bd_intf_net -intf_net S_AXIS_B_0_1 [get_bd_intf_ports S_AXIS_B_0] [get_bd_intf_pins floating_point_0/S_AXIS_B]
-  connect_bd_intf_net -intf_net floating_point_0_M_AXIS_RESULT [get_bd_intf_ports M_AXIS_RESULT_0] [get_bd_intf_pins floating_point_0/M_AXIS_RESULT]
-
-  # Create port connections
-  connect_bd_net -net aclk_0_1 [get_bd_ports aclk_0] [get_bd_pins floating_point_0/aclk]
-
-  # Create address segments
-
-
-  # Restore current instance
-  current_bd_instance $oldCurInst
-
-  validate_bd_design
-  save_bd_design
-  close_bd_design $design_name 
-}
-# End of cr_bd_bd_fadd()
-cr_bd_bd_fadd ""
-set_property REGISTERED_WITH_MANAGER "1" [get_files bd_fadd.bd ] 
-set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files bd_fadd.bd ] 
-
-
-# Create wrapper file for bd_fadd.bd
-make_wrapper -files [get_files bd_fadd.bd] -import -top
 
 # Create 'synth_1' run (if not found)
 if {[string equal [get_runs -quiet synth_1] ""]} {
@@ -1660,9 +1458,7 @@ if { $obj != "" } {
 
 }
 set obj [get_runs synth_1]
-set_property -name "needs_refresh" -value "1" -objects $obj
 set_property -name "strategy" -value "Vivado Synthesis Defaults" -objects $obj
-set_property -name "steps.synth_design.args.retiming" -value "1" -objects $obj
 
 # set the current synth run
 current_run -synthesis [get_runs synth_1]
@@ -1875,7 +1671,6 @@ set_property -name "options.warn_on_violation" -value "1" -objects $obj
 
 }
 set obj [get_runs impl_1]
-set_property -name "needs_refresh" -value "1" -objects $obj
 set_property -name "strategy" -value "Vivado Implementation Defaults" -objects $obj
 set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects $obj
 set_property -name "steps.write_bitstream.args.verbose" -value "0" -objects $obj
