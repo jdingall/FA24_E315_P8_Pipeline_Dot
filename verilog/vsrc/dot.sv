@@ -15,33 +15,9 @@
 
 module dot #(   
 
-    //Python3
-    //    import numpy as np
-    //    import struct
-        
-    //    weights = np.array( [[1,2,3,4],[5,6,7,8],[9,10,11,12]], dtype=np.float32)
-    //    inputs = np.array([[0.1,0.2,0.3]], dtype=np.float32)
-    //    outs = np.dot(inputs, weights)
-    //    print ('='*80 + '\n Used in dot.sv \n' + '='*80)
-    //    print ('parameter ROWS = %d,' %weights.shape[0])
-    //    print ('parameter COLS = %d,' %weights.shape[1])
-    //    print ()
-    //    print ('parameter [31:0] weights [0:ROWS-1] [0:COLS-1] = \'{')
-    //    for i in range(weights.shape[0]):
-    //        flts_hex = map( lambda x: '$shortrealtobits(' + str(x) + ')', weights[i])
-    //        print ('\t\'{' + ','.join(flts_hex)  + '}', end='')
-    //        print (',' if i < weights.shape[0]-1 else '')
-    //    print ('}')
-
 parameter ROWS = 3,
-parameter COLS = 4,
+parameter COLS = 4
 
-parameter [31:0] weights [0:ROWS-1] [0:COLS-1] = '{
-	'{$shortrealtobits(1.0),$shortrealtobits(2.0),$shortrealtobits(3.0),$shortrealtobits(4.0)},
-	'{$shortrealtobits(5.0),$shortrealtobits(6.0),$shortrealtobits(7.0),$shortrealtobits(8.0)},
-	'{$shortrealtobits(9.0),$shortrealtobits(10.0),$shortrealtobits(11.0),$shortrealtobits(12.0)}
-}
-     
     )(
 
 
@@ -53,6 +29,9 @@ parameter [31:0] weights [0:ROWS-1] [0:COLS-1] = '{
     input                           INPUT_AXIS_TLAST,
     input                           INPUT_AXIS_TVALID,
     output reg                      INPUT_AXIS_TREADY,
+
+    //weight matrix
+    input [31:0]                    weights [0:ROWS-1] [0:COLS-1], 
     
     // Outgoing Vector AXI4-Stream 		
     output reg [31:0]               OUTPUT_AXIS_TDATA,
