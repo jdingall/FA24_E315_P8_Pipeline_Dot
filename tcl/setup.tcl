@@ -29,6 +29,9 @@ set_property top dot_20_10_tb [get_filesets sim_dot_20_10]
 # set *.sv to SystemVerilog
 set_property file_type SystemVerilog [get_files *.sv]
 
+#set design top
+set_property top axis_dot_20_10 [current_fileset]
+
 # set active simulation
 current_fileset -simset [ get_filesets sim_dot_20_10 ]
 
