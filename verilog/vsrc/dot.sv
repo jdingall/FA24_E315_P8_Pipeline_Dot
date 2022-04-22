@@ -52,33 +52,33 @@ parameter [31:0] weights [0:ROWS-1] [0:COLS-1] = '{
     input [31:0]                    INPUT_AXIS_TDATA,
     input                           INPUT_AXIS_TLAST,
     input                           INPUT_AXIS_TVALID,
-    output reg                      INPUT_AXIS_TREADY,
+    output logic                    INPUT_AXIS_TREADY,
     
     // Outgoing Vector AXI4-Stream 		
-    output reg [31:0]               OUTPUT_AXIS_TDATA,
-    output reg                      OUTPUT_AXIS_TLAST,
-    output reg                      OUTPUT_AXIS_TVALID,
+    output logic [31:0]             OUTPUT_AXIS_TDATA,
+    output logic                    OUTPUT_AXIS_TLAST,
+    output logic                    OUTPUT_AXIS_TVALID,
     input                           OUTPUT_AXIS_TREADY
 
     );  
 
     //output vector array (also used for dot calculations)
-    reg [31:0] outputs [0:COLS-1];       
+    logic [31:0] outputs [0:COLS-1];       
     //bulk clear the entire output array 
-    reg clear_outputs;
+    logic clear_outputs;
 
     //buffer for the most recient input
-    reg [31:0] inbuf, next_inbuf;     
+    logic [31:0] inbuf, next_inbuf;     
 
     //ask for the Floating-Point Multiply-Accumulate module to be run
-    reg run_fmac;
+    logic run_fmac;
 
     //tracks the row/column location of weight matrix values headed to the fmac
-    reg [31:0]  i, next_i;
-    reg [31:0]  j, next_j;
+    logic [31:0]  i, next_i;
+    logic [31:0]  j, next_j;
 
     //tracks the row/column local of returning fmac values 
-    reg [31:0] rxi, rxj;
+    logic [31:0] rxi, rxj;
     
     //signal when the last values has been recieved from the fmac
     wire rx_done;
@@ -125,7 +125,7 @@ parameter [31:0] weights [0:ROWS-1] [0:COLS-1] = '{
     localparam FMAC_DELAY = 8; 
     //a timer to track the FPU delays
     localparam TIMER_SZ = $clog2(FMAC_DELAY + 1);
-    reg [TIMER_SZ-1:0] fpu_timer, next_fpu_timer; 
+    logic [TIMER_SZ-1:0] fpu_timer, next_fpu_timer; 
 
     // STATES
     enum { ST_IDLE, ST_RUN_FMAC, ST_WAIT_FMAC, ST_STEP_ROW, 
