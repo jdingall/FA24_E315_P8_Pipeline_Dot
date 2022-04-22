@@ -140,16 +140,20 @@ localparam [31:0] weights [0:ROWS-1] [0:COLS-1] = '{
 	}
 };
 
+    //When it comes time to parallelize this, update to accel_dot
+    //i.e.:  accel_dot #( .ROWS(ROWS), .COLS(COLS)) dot0 (...
+
     dot #(
         .ROWS(ROWS),
-        .COLS(COLS),
-        .weights(weights)
+        .COLS(COLS)
     ) dot0 (
     
 		// AXI4-Stream Interface
 		.clk(clk),
 		.rst(rst),
 		
+        .weights(weights),
+
         .INPUT_AXIS_TDATA(INPUT_AXIS_TDATA),
         .INPUT_AXIS_TLAST(INPUT_AXIS_TLAST),
         .INPUT_AXIS_TVALID(INPUT_AXIS_TVALID),
