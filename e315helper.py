@@ -12,6 +12,8 @@ import re
 class Helper():
 
     def __init__(self, vivado=None):
+        
+        self.checkOS()
 
         self.MY_DIR = os.path.dirname(os.path.realpath(__file__))
         self.JF = self.MY_DIR + '/.data.json'
@@ -22,6 +24,17 @@ class Helper():
 
         self.version = "1.0.0"
     
+    def checkOS(self):
+        platform = sys.platform
+        if platform == "linux" or platform == "linux2":
+            self.log.debug("Found Linux")
+        elif platform == "darwin":
+            self.log.debug("Found OSX")
+            raise Exception("OSX Not Supported")
+        elif platform == "win32":
+            self.log.debug("Found Windows")
+            raise Exception("Windows Not Supported")
+
     def getVersion(self):
         return self.version
 
@@ -199,12 +212,12 @@ class Parser():
 
         init_ap.set_defaults(function=self.init)
         args = ap.parse_args()
-        
-        if not hasattr(self, args.command):
-            print ('Unrecognized Command')
+       
+        if args.command == None: 
+            print ('No command specified!')
             ap.print_help()
             exit(1)
-        
+       
         #jump to the correct command function
         getattr(self, args.command)(args)
 
