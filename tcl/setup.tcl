@@ -35,5 +35,8 @@ set_property top axis_dot_20_10 [current_fileset]
 # set active simulation
 current_fileset -simset [ get_filesets sim_dot_20_10 ]
 
+#make sims run longer by default
+set_property -name {xsim.simulate.runtime} -value {1000us} -objects [get_filesets sim_*]
+
 #launch_runs synth_1
 #wait_on_run synth_1
