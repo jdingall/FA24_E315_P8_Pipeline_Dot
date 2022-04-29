@@ -186,11 +186,18 @@ module dot_20_10_tb();
         );
         
         cycles = 0;
-        while (OUTPUT_AXIS_TLAST != 'h1) begin
+        while ( ! (
+            (OUTPUT_AXIS_TREADY === 'h1) && 
+            (OUTPUT_AXIS_TVALID === 'h1) && 
+            (OUTPUT_AXIS_TLAST === 'h1) ) ) begin
             cycles += 1;
-            @(negedge clk);
+            
+            @(posedge clk);
+            
+            assert (cycles < 4410) else 
+                $fatal(1, "Running too long, check OUTPUT_AXIS?");
         end
-                
+                        
     endtask
        
 
@@ -219,8 +226,7 @@ module dot_20_10_tb();
             timeit(cycles);
         join                                                  
         
-        $display("@@@Passed in %d Cycles (was 2210)", cycles);
-        
+        $display("@@@Passed in %d Cycles (was 2211)", cycles);
         $finish;
 
     end
