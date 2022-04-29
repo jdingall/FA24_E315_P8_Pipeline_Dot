@@ -186,7 +186,7 @@ module dot_20_10_tb();
         );
         
         cycles = 0;
-        while (OUTPUT_AXIS_TLAST == 'h0) begin
+        while (OUTPUT_AXIS_TLAST != 'h1) begin
             cycles += 1;
             @(negedge clk);
         end
