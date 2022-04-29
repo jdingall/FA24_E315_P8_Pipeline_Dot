@@ -23,7 +23,7 @@ add_files -fileset sim_dot ${TESTDIR}/dot/tb_dot.sv
 set_property top tb_dot [get_filesets sim_dot]
 
 create_fileset -simset sim_accel_dot
-add_files -fileset sim_dot ${TESTDIR}/accel_dot/accel_dot_tb.sv
+add_files -fileset sim_accel_dot ${TESTDIR}/accel_dot/accel_dot_tb.sv
 set_property top accel_dot_tb [get_filesets sim_accel_dot]
 
 
