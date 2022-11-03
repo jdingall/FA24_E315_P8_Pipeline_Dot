@@ -22,6 +22,11 @@ create_fileset -simset sim_dot
 add_files -fileset sim_dot ${TESTDIR}/dot/tb_dot.sv
 set_property top tb_dot [get_filesets sim_dot]
 
+create_fileset -simset sim_accel_dot
+add_files -fileset sim_accel_dot ${TESTDIR}/accel_dot/accel_dot_tb.sv
+set_property top accel_dot_tb [get_filesets sim_accel_dot]
+
+
 create_fileset -simset sim_dot_20_10
 add_files -fileset sim_dot_20_10 ${TESTDIR}/dot_20_10/dot_20_10_tb.sv
 set_property top dot_20_10_tb [get_filesets sim_dot_20_10]
