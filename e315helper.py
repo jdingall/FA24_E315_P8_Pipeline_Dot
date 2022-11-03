@@ -24,17 +24,22 @@ class Helper():
         self.vivado = vivado
 
         self.version = "1.0.0"
-    
+
     def checkOS(self):
         platform = sys.platform
         if platform == "linux" or platform == "linux2":
-            self.log.debug("Found Linux")
+            logging.debug("Found Linux")
         elif platform == "darwin":
-            self.log.debug("Found OSX")
+            logging.debug("Found OSX")
             raise Exception("OSX Not Supported")
         elif platform == "win32":
-            self.log.debug("Found Windows")
+            logging.debug("Found Windows")
             raise Exception("Windows Not Supported")
+        
+        #check if running on the Pynq
+        if os.path.exists('/dev/uio0'):
+            logging.debug("found /dev/uio0, means Pynq")
+            raise Exception("Running on Pynq not supported.  Run on the host machine.")
 
     def getVersion(self):
         return self.version
@@ -45,7 +50,7 @@ class Helper():
                 return json.load(f)
         else:
             return {"IP": "192.168.2.99", 
-                    "Proj": "P4_Popcount", 
+                    "Proj": "Parallel_Popcount", 
                     "fpga_design": "bd_fpga",
                     "branch": "master"}
 
@@ -55,12 +60,10 @@ class Helper():
             json.dump( self.J, f) 
 
      
-
     def run_command(self, command):
         print ('running: ', command)
         result = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         return result.communicate()
-
 
     def vivado_build_cleanup(self,):
         vsrc_dir = self.MY_DIR + '/verilog/vsrc/'
@@ -174,6 +177,29 @@ class Helper():
         for command in commands:                     
             self.run_command(command)
 
+    def update(self):
+        ''' running git update from master and pushing to pynq '''
+        ssh = 'ssh -i ' + self.priv_key + ' xilinx@'+self.J['IP'] 
+        proj = self.J['Proj']
+
+        commands = [
+                    'git pull origin ' + self.J['branch'], 
+                    ssh + ' "cd ~/jupyter_notebooks/' + proj + ' && git commit -a -m \\"e315helper.py update\\" ' + '"',
+                    'GIT_SSH_COMMAND=\'ssh -i '+self.priv_key + '\' git pull pynq ' + self.J['branch'], 
+
+                    ssh + ' "mkdir -p ~/tmp" ',
+                    ssh + ' "cd ~/tmp && git init --bare" ',
+                    'git remote remove tmp', 
+                    'git remote add tmp xilinx@' + self.J['IP'] + ':~/tmp/',
+                    'GIT_SSH_COMMAND=\'ssh -i '+self.priv_key + '\' git push tmp ' + self.J['branch'], 
+                    ssh + ' "cd ~/jupyter_notebooks/' + proj + ' && git pull origin ' + self.J['branch'] + '"',
+                    ssh + ' "rm -rf ~/tmp" ',
+        ]
+
+        for command in commands:                     
+            self.run_command(command)
+
+
     def set_ip(self, IP):
         # https://www.geeksforgeeks.org/python-program-to-validate-an-ip-address/
         regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
@@ -228,6 +254,8 @@ class Parser():
         bitstream_ap= sap.add_parser('bitstream', help='write the bitstream to the Pynq')
         bitstream_ap.add_argument('--ip', type=str, nargs='?', help="Ip Address of Pynq")
 
+        update_ap= sap.add_parser('update', help='update from git') 
+
         setIp_ap= sap.add_parser('setIp', help='set the Pynq\'s IP address')
         setIp_ap.add_argument('--ip', type=str, nargs='?', help="Ip Address of Pynq")
 
@@ -235,7 +263,6 @@ class Parser():
 
         init_ap.set_defaults(function=self.init)
         args = ap.parse_args()
-       
 
         # load debug mode
         if args.debug: 
@@ -251,7 +278,7 @@ class Parser():
             print ('No command specified!')
             ap.print_help()
             exit(1)
-       
+
         #jump to the correct command function
         getattr(self, args.command)(args)
 
@@ -291,6 +318,10 @@ class Parser():
             h.set_ip(args.ip)
         h.load_bitstream()
 
+    def update(self, args):
+        print('Running update')
+        h = Helper()
+        h.update()
 
     def setIp(self, args):
         print ('Running setIp')
