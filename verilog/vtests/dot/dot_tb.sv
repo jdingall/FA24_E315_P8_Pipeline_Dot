@@ -13,7 +13,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module tb_dot();
+module dot_tb();
 
     integer                     i;
     
@@ -34,6 +34,14 @@ module tb_dot();
     wire                        OUTPUT_AXIS_TVALID;
     reg                         OUTPUT_AXIS_TREADY;
 
+    localparam ROWS = 3;
+    localparam COLS = 4;
+
+    localparam [31:0] weights [0:ROWS-1] [0:COLS-1] = '{
+       '{$shortrealtobits(1.0),$shortrealtobits(2.0),$shortrealtobits(3.0),$shortrealtobits(4.0)},
+       '{$shortrealtobits(5.0),$shortrealtobits(6.0),$shortrealtobits(7.0),$shortrealtobits(8.0)},
+       '{$shortrealtobits(9.0),$shortrealtobits(10.0),$shortrealtobits(11.0),$shortrealtobits(12.0)}
+    };
 
     //used to access the FP tests table    
     bit [31:0] fp_hex;
@@ -43,6 +51,8 @@ module tb_dot();
     dot DUT ( 
         .clk, 
         .rst, 
+
+        .weights(weights),
 
         .INPUT_AXIS_TDATA,
         .INPUT_AXIS_TLAST,
@@ -61,11 +71,9 @@ module tb_dot();
     
 //     Python3
 //     import numpy as np
-    
 //    weights = np.array( [[1,2,3,4],[5,6,7,8],[9,10,11,12]], dtype=np.float32)
 //    inputs = np.array([[0.1,0.2,0.3]], dtype=np.float32)
 //    outs = np.dot(inputs, weights)
-    
 //    flts = inputs[0]
 //    flts_bits = list(map( lambda x: '$shortrealtobits(' + str(x) + ')', flts))
 //    offset=4
@@ -94,11 +102,9 @@ module tb_dot();
     
 //    Python3
 //    import numpy as np
-    
 //    weights = np.array( [[1,2,3,4],[5,6,7,8],[9,10,11,12]], dtype=np.float32)
 //    inputs = np.array([[0.1,0.2,0.3]], dtype=np.float32)
 //    outs = np.dot(inputs, weights)
-    
 //    flts = outs[0]
 //    flts_bits = list(map( lambda x: '$shortrealtobits(' + str(x) + ')', flts))
 //    offset=4
@@ -219,6 +225,8 @@ module tb_dot();
         
         repeat(20) @(negedge clk);     
         
+        $fatal(1, "add timing");
+
         $display("@@@Passed");
         
         $finish;
