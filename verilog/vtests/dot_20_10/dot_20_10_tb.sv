@@ -32,7 +32,7 @@ module dot_20_10_tb();
     wire [31:0]                 OUTPUT_AXIS_TDATA;
     wire                        OUTPUT_AXIS_TLAST;
     wire                        OUTPUT_AXIS_TVALID;
-    reg                         OUTPUT_AXIS_TREADY;
+    logic                       OUTPUT_AXIS_TREADY;
 
 
     //used to access the FP tests table    
@@ -161,7 +161,7 @@ module dot_20_10_tb();
               
         $display("Receiving Output Vector");
         for (i = 0; i < 10; ++i) begin
-            real error; 
+            real mismatch; 
             
             outputs_table_lookup(i, sol_hex);
             
@@ -170,13 +170,14 @@ module dot_20_10_tb();
             $display( "Received %h (%f)",
                 fp_hex, $bitstoshortreal(fp_hex));
                 
-            //skip bit 0 to tolerate off-by-1-LSB rounding errors
-            error = $bitstoshortreal(fp_hex) - $bitstoshortreal(sol_hex);
-            $display("Error: %f", error);
+            //compute the difference between what was observed and what was
+            // expected with Python
+            mismatch = $bitstoshortreal(fp_hex) - $bitstoshortreal(sol_hex);
+            $display("mismatch: %f", mismatch);
             
-            assert( (error > -0.000001) && (error < +0.000001) ) else
-                $fatal(1, "Bad Test Response %h (%f), Expected %h (%f) Error:%f", 
-                    fp_hex, $bitstoshortreal(fp_hex), sol_hex, $bitstoshortreal(sol_hex), error); 
+            assert( (mismatch > -0.000001) && (mismatch < +0.000001) ) else
+                $fatal(1, "Bad Test Response %h (%f), Expected %h (%f) mismatch:%f", 
+                    fp_hex, $bitstoshortreal(fp_hex), sol_hex, $bitstoshortreal(sol_hex), mismatch); 
             
         end
     endtask

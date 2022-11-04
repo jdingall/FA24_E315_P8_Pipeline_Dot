@@ -71,7 +71,6 @@ module dot_tb();
 
     always #10 clk <= ~clk;
    
-    //FIXME:  make python/dot.py
     // see python/dot.py for values
     task inputs_table_lookup(
         input integer id,
@@ -225,7 +224,7 @@ module dot_tb();
         repeat(2) @(negedge clk);
         
         $display("Starting Simulation"); 
-        
+
         fork
             compute();
             timeit(cycles);
