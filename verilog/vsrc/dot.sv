@@ -175,8 +175,10 @@ parameter COLS = 4
 
             ST_WAIT_FMAC: begin
                 if (fpu_timer == 0) begin
+                    // end of a row? 
                     if (j == COLS - 1) 
                         next_state = ST_TERM_ROW;
+                    // go on to the next value in the row
                     else begin
                         next_state = ST_STEP_ROW;     
                     end
@@ -190,7 +192,7 @@ parameter COLS = 4
 
             ST_TERM_ROW: begin
             
-                //jump to the next row
+                //start on the next row
                 if (i < ROWS - 1) begin
                 
                     INPUT_AXIS_TREADY = 'h1;
@@ -203,7 +205,7 @@ parameter COLS = 4
                         next_inbuf = INPUT_AXIS_TDATA;
                         next_state = ST_RUN_FMAC;
                     end
-                
+                //done with inputs, start sending out outputs
                 end else begin
                     next_i = 0;
                     next_j = 0;
@@ -234,12 +236,11 @@ parameter COLS = 4
     end
 
 
-    /////////////////////////////////////////////
-    //
-    // Recv from FMAC Control 
-    //
-    /////////////////////////////////////////////
-
+/////////////////////////////////////////////
+//
+// Recv from FMAC Control 
+//
+/////////////////////////////////////////////
 
 always_ff@(posedge clk) begin
     

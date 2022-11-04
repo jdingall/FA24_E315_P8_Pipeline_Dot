@@ -299,10 +299,10 @@
       }
     },
     "interface_nets": {
-      "floating_point_0_M_AXIS_RESULT": {
+      "S_AXIS_C_0_1": {
         "interface_ports": [
-          "M_AXIS_RESULT_0",
-          "floating_point_0/M_AXIS_RESULT"
+          "S_AXIS_C_0",
+          "floating_point_0/S_AXIS_C"
         ]
       },
       "S_AXIS_A_0_1": {
@@ -317,10 +317,10 @@
           "floating_point_0/S_AXIS_B"
         ]
       },
-      "S_AXIS_C_0_1": {
+      "floating_point_0_M_AXIS_RESULT": {
         "interface_ports": [
-          "S_AXIS_C_0",
-          "floating_point_0/S_AXIS_C"
+          "M_AXIS_RESULT_0",
+          "floating_point_0/M_AXIS_RESULT"
         ]
       }
     },
