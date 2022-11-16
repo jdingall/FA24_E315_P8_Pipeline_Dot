@@ -38,7 +38,7 @@ set_property file_type SystemVerilog [get_files *.sv]
 set_property top axis_dot_20_10 [current_fileset]
 
 # set active simulation
-current_fileset -simset [ get_filesets sim_dot_20_10 ]
+current_fileset -simset [ get_filesets sim_dot ]
 
 #make sims run longer by default
 set_property -name {xsim.simulate.runtime} -value {1000us} -objects [get_filesets sim_*]
